@@ -66,10 +66,12 @@ def is_invalid_priority_candidate(value):
 
 
 def load_tasks(file_path=None):
-    global tasks, next_id
+    global tasks, next_id, DATA_FILE
 
     if file_path is None:
         file_path = DATA_FILE
+    else:
+        DATA_FILE = file_path
 
     if not os.path.exists(file_path):
         tasks = []
@@ -123,8 +125,12 @@ def load_tasks(file_path=None):
 
 
 def save_tasks(file_path=None):
+    global DATA_FILE
+
     if file_path is None:
         file_path = DATA_FILE
+    else:
+        DATA_FILE = file_path
 
     data = [
         {"id": task.id, "title": task.title, "done": task.done, "priority": task.priority}

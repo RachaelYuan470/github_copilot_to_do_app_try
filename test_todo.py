@@ -32,6 +32,26 @@ def test_complete_task():
     assert todo.tasks[0].done is True
 
 
+def test_complete_task_persists_to_file(tmp_path):
+    reset_state()
+    file_path = tmp_path / "tasks.json"
+    file_path.write_text(
+        json.dumps([
+            {"id": 1, "title": "Write report", "done": False, "priority": "Medium"},
+        ]),
+        encoding="utf-8",
+    )
+
+    todo.DATA_FILE = str(file_path)
+    todo.load_tasks(str(file_path))
+    todo.complete_task(1)
+
+    assert todo.tasks[0].done is True
+    assert json.loads(file_path.read_text(encoding="utf-8")) == [
+        {"id": 1, "title": "Write report", "done": True, "priority": "Medium"},
+    ]
+
+
 def test_delete_task():
     reset_state()
     todo.add_task("Read book")
