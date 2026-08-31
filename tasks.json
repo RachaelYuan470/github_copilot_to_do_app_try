@@ -1,7 +1,8 @@
 [
   {
     "id": 1,
-    "title": "Test task",
-    "done": false
+    "title": "Review plan",
+    "done": false,
+    "priority": "High"
   }
 ]
