@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 
 DATA_FILE = "tasks.json"
+VALID_PRIORITIES = ("Low", "Medium", "High")
 
 
 @dataclass
@@ -11,10 +12,57 @@ class Task:
     id: int
     title: str
     done: bool = False
+    priority: str = "Medium"
 
 
 tasks = []
 next_id = 1
+
+
+def normalize_priority(value, default="Medium"):
+    if value is None:
+        return default
+
+    text = str(value).strip()
+    if not text:
+        return default
+
+    lowered = text.lower()
+    for priority in VALID_PRIORITIES:
+        if lowered == priority.lower():
+            return priority
+
+    return default
+
+
+def prompt_for_priority():
+    while True:
+        print("Priority (Low, Medium, High):")
+        choice = input("task-priority> ").strip()
+        normalized = normalize_priority(choice, default=None)
+
+        if normalized in VALID_PRIORITIES:
+            return normalized
+
+        print("Invalid priority. Please choose Low, Medium, or High.")
+
+
+def is_invalid_priority_candidate(value):
+    if value is None:
+        return False
+
+    text = str(value).strip()
+    if not text:
+        return False
+
+    lowered = text.lower()
+    if lowered in {"urgent", "critical"}:
+        return True
+
+    if text.isdigit():
+        return True
+
+    return False
 
 
 def load_tasks(file_path=None):
@@ -63,9 +111,10 @@ def load_tasks(file_path=None):
         task_id = item.get("id")
         title = item.get("title")
         done = item.get("done", False)
+        priority = normalize_priority(item.get("priority", "Medium"))
 
         if isinstance(task_id, int) and isinstance(title, str):
-            valid_tasks.append(Task(id=task_id, title=title, done=bool(done)))
+            valid_tasks.append(Task(id=task_id, title=title, done=bool(done), priority=priority))
             max_id = max(max_id, task_id)
 
     tasks = valid_tasks
@@ -78,7 +127,7 @@ def save_tasks(file_path=None):
         file_path = DATA_FILE
 
     data = [
-        {"id": task.id, "title": task.title, "done": task.done}
+        {"id": task.id, "title": task.title, "done": task.done, "priority": task.priority}
         for task in tasks
     ]
 
@@ -89,14 +138,25 @@ def save_tasks(file_path=None):
     return data
 
 
-def add_task(title):
+def add_task(title, priority="Medium"):
     global next_id
 
-    task = Task(id=next_id, title=title.strip(), done=False)
+    if title is None:
+        raise ValueError("Task title cannot be empty.")
+
+    cleaned_title = str(title).strip()
+    if not cleaned_title:
+        raise ValueError("Task title cannot be empty.")
+
+    normalized_priority = normalize_priority(priority, default=None)
+    if normalized_priority not in VALID_PRIORITIES:
+        raise ValueError("Invalid priority. Please choose Low, Medium, or High.")
+
+    task = Task(id=next_id, title=cleaned_title, done=False, priority=normalized_priority)
     tasks.append(task)
     next_id += 1
     save_tasks()
-    print(f"Added task #{task.id}: {task.title}")
+    print(f"Added task #{task.id}: {task.title} [{task.priority}]")
 
 
 def list_tasks():
@@ -106,7 +166,7 @@ def list_tasks():
 
     for task in tasks:
         status = "done" if task.done else "todo"
-        print(f"{task.id}. [{status}] {task.title}")
+        print(f"{task.id}. [{status}] [{task.priority}] {task.title}")
 
 
 def complete_task(task_id):
@@ -136,7 +196,7 @@ def delete_task(task_id):
 
 def show_help():
     print("Commands:")
-    print("  add <task>")
+    print("  add <task> [priority]")
     print("  list")
     print("  complete <task_id>")
     print("  delete <task_id>")
@@ -156,14 +216,40 @@ def process_command(command_line):
     if action == "add":
         if len(parts) < 2 or not parts[1].strip():
             title = input("Enter task: ").strip()
+            if not title:
+                print("Task cannot be empty.")
+                return False
+            priority = prompt_for_priority()
         else:
-            title = parts[1].strip()
+            content = parts[1].strip()
+            words = content.split()
+            title = content
+            priority = "Medium"
 
-        if not title:
-            print("Task cannot be empty.")
-            return False
+            if len(words) >= 2:
+                last_word = words[-1]
+                normalized = normalize_priority(last_word, default=None)
+                if normalized in VALID_PRIORITIES:
+                    title = " ".join(words[:-1]).strip()
+                    priority = normalized
+                elif is_invalid_priority_candidate(last_word):
+                    print("Invalid priority. Please choose Low, Medium, or High.")
+                    return False
+                else:
+                    title = content
+                    priority = prompt_for_priority()
+            else:
+                title = content
+                priority = prompt_for_priority()
 
-        add_task(title)
+            if not title:
+                print("Task cannot be empty.")
+                return False
+
+        try:
+            add_task(title, priority)
+        except ValueError as exc:
+            print(str(exc))
         return False
 
     if action in ("list", "ls"):
