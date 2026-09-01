@@ -175,6 +175,17 @@ def list_tasks():
         print(f"{task.id}. [{status}] [{task.priority}] {task.title}")
 
 
+def list_incomplete():
+    incomplete = [t for t in tasks if not t.done]
+    if not incomplete:
+        print("No incomplete tasks.")
+        return
+
+    for task in incomplete:
+        # reuse the same output format as list_tasks but with explicit todo status
+        print(f"{task.id}. [todo] [{task.priority}] {task.title}")
+
+
 def complete_task(task_id):
     for task in tasks:
         if task.id == task_id:
@@ -204,6 +215,7 @@ def show_help():
     print("Commands:")
     print("  add <task> [priority]")
     print("  list")
+    print("  incomplete")
     print("  complete <task_id>")
     print("  delete <task_id>")
     print("  help")
@@ -260,6 +272,10 @@ def process_command(command_line):
 
     if action in ("list", "ls"):
         list_tasks()
+        return False
+
+    if action in ("incomplete", "todo", "pending"):
+        list_incomplete()
         return False
 
     if action in ("complete", "done"):

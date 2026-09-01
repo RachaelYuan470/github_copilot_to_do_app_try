@@ -278,6 +278,22 @@ def test_list_tasks_displays_priority(capsys):
     assert "Design app" in output
 
 
+def test_incomplete_command_shows_only_incomplete(capsys):
+    reset_state()
+    todo.tasks = [
+        todo.Task(id=1, title="A", done=False, priority="Low"),
+        todo.Task(id=2, title="B", done=True, priority="High"),
+        todo.Task(id=3, title="C", done=False, priority="Medium"),
+    ]
+
+    todo.process_command("incomplete")
+
+    output = capsys.readouterr().out
+    assert "A" in output
+    assert "C" in output
+    assert "B" not in output
+
+
 def test_load_old_task_without_priority(tmp_path):
     reset_state()
     file_path = tmp_path / "tasks.json"
