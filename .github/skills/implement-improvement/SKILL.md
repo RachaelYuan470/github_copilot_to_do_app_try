@@ -1,5 +1,4 @@
 ---
-
 name: implement-improvement
 description: Implement a small improvement to the todo-app, test it, debug failures, review the changes, create a focused local commit, and wait for user approval before pushing.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
