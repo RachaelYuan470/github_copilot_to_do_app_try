@@ -265,6 +265,19 @@ def test_add_command_with_invalid_priority_does_not_create_task(capsys):
     assert todo.tasks[0].priority == "High"
 
 
+def test_add_command_with_invalid_short_priority_does_not_create_task(capsys):
+    reset_state()
+
+    result = todo.process_command("add task writing ii")
+
+    captured = capsys.readouterr()
+    assert result is False
+    assert len(todo.tasks) == 0
+    assert "Invalid priority" in captured.out
+    # ensure invalid token is not included in any created task titles
+    assert "ii" not in "".join(task.title for task in todo.tasks)
+
+
 def test_list_tasks_displays_priority(capsys):
     reset_state()
     todo.tasks = [

@@ -250,12 +250,10 @@ def process_command(command_line):
                 if normalized in VALID_PRIORITIES:
                     title = " ".join(words[:-1]).strip()
                     priority = normalized
-                elif is_invalid_priority_candidate(last_word):
+                else:
+                    # A trailing token was supplied and is not a valid priority — reject the command.
                     print("Invalid priority. Please choose Low, Medium, or High.")
                     return False
-                else:
-                    title = content
-                    priority = prompt_for_priority()
             else:
                 title = content
                 priority = prompt_for_priority()
